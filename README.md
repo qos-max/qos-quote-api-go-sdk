@@ -1,6 +1,6 @@
 # QOSAPI Go客户端
 
-[![Go参考文档](https://pkg.go.dev/badge/github.com/qos-max/qos-quote-api-go-sdk.svg)](https://pkg.go.dev/github.com/qos-max/qos-quote-api-go-sdk)
+[![Go参考文档](https://pkg.go.dev/badge/github.com/qos-max/qos-quote-api-go-sdk/qosapi.svg)](https://pkg.go.dev/github.com/qos-max/qos-quote-api-go-sdk/qosapi)
 [![许可证](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 QOS行情数据API(Quote Ocean System)的Go客户端库。提供HTTP和WebSocket接口访问股票和加密货币的实时行情数据。
