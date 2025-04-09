@@ -5,6 +5,10 @@
 
 QOS行情数据API(Quote Ocean System)的Go客户端库。提供HTTP和WebSocket接口访问股票和加密货币的实时行情数据。
 
+官网：[https://qos.hk](https://qos.hk)
+API文档：[https://qos.hk/api.html](https://qos.hk/api.html)
+注册API KEY：[https://qos.hk](https://qos.hk)
+
 ## 功能特性
 
 - 完整实现所有QOS API接口
