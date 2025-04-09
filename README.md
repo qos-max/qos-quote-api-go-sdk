@@ -115,3 +115,4 @@ client := qosapi.NewWSClient("您的API密钥")
 ## 许可证
 
 本项目采用MIT许可证 - 详情见LICENSE文件
+License: [MIT](./LICENSE)
