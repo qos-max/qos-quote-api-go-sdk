@@ -17,7 +17,7 @@ QOS行情数据API(Quote Ocean System)的Go客户端库。提供HTTP和WebSocket
 ## 安装
 
 ```bash
-go get github.com/qos-max/qosapi
+go get github.com/qos-max/qos-quote-api-go-sdk/qos-quote-api-go-sdk/qosapi
 ```
 
 ## 使用示例
@@ -31,7 +31,7 @@ import (
 "fmt"
 "log"
 
-    "github.com/qos-max/qosapi"
+    "github.com/qos-max/qos-quote-api-go-sdk/qosapi"
 )
 
 func main() {
@@ -60,7 +60,7 @@ import (
 "log"
 "time"
 
-    "github.com/qos-max/qosapi"
+    "github.com/qos-max/qos-quote-api-go-sdk/qosapi"
 )
 
 func main() {
