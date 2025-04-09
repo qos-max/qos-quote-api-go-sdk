@@ -1,4 +1,4 @@
-module github.com/qos-max/qosapi
+module github.com/qos-max/qos-quote-api-go-sdk/qosapi
 
 go 1.23
 
