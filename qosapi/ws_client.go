@@ -3,7 +3,6 @@ package qosapi
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/url"
 	"sync"
@@ -99,6 +98,10 @@ func (c *WSClient) readLoop() {
 				continue
 			}
 
+			if baseResp.Type == "" {
+				baseResp.Type = baseResp.TP
+			}
+
 			// 处理订阅数据推送
 			switch baseResp.Type {
 			case "S":
@@ -107,8 +110,10 @@ func (c *WSClient) readLoop() {
 					log.Printf("Failed to unmarshal snapshot: %v", err)
 					continue
 				}
-				if cb, ok := c.subscribers["S_"+snapshot.Code]; ok {
-					cb(snapshot)
+				if cb, ok := c.subscribers["S"]; ok {
+					if len(snapshot.Code) > 0 {
+						cb(snapshot)
+					}
 				}
 			case "T":
 				var trade WSTrade
@@ -116,8 +121,10 @@ func (c *WSClient) readLoop() {
 					log.Printf("Failed to unmarshal trade: %v", err)
 					continue
 				}
-				if cb, ok := c.subscribers["T_"+trade.Code]; ok {
-					cb(trade)
+				if cb, ok := c.subscribers["T"]; ok {
+					if len(trade.Code) > 0 {
+						cb(trade)
+					}
 				}
 			case "D":
 				var depth WSDepth
@@ -125,8 +132,10 @@ func (c *WSClient) readLoop() {
 					log.Printf("Failed to unmarshal depth: %v", err)
 					continue
 				}
-				if cb, ok := c.subscribers["D_"+depth.Code]; ok {
-					cb(depth)
+				if cb, ok := c.subscribers["D"]; ok {
+					if len(depth.Code) > 0 {
+						cb(depth)
+					}
 				}
 			case "K":
 				var kline WSKLine
@@ -134,9 +143,10 @@ func (c *WSClient) readLoop() {
 					log.Printf("Failed to unmarshal kline: %v", err)
 					continue
 				}
-				key := fmt.Sprintf("K_%d_%s", kline.KLineType, kline.Code)
-				if cb, ok := c.subscribers[key]; ok {
-					cb(kline)
+				if cb, ok := c.subscribers["K"]; ok {
+					if len(kline.Code) > 0 {
+						cb(kline)
+					}
 				}
 			default:
 				// 处理请求响应
@@ -148,7 +158,7 @@ func (c *WSClient) readLoop() {
 					if baseResp.Msg != "OK" {
 						cb(nil, errors.New(baseResp.Msg))
 					} else {
-						cb(baseResp.Data, nil)
+						cb(baseResp, nil)
 					}
 				} else {
 					c.mu.Unlock()
@@ -180,10 +190,8 @@ func (c *WSClient) sendRequest(req WSRequest, callback func(interface{}, error))
 // SubscribeSnapshot 订阅实时快照
 func (c *WSClient) SubscribeSnapshot(codes []string, callback func(WSSnapshot)) error {
 	key := "S"
-	for _, code := range codes {
-		c.subscribers[key+"_"+code] = func(data interface{}) {
-			callback(data.(WSSnapshot))
-		}
+	c.subscribers[key] = func(data interface{}) {
+		callback(data.(WSSnapshot))
 	}
 
 	return c.sendRequest(WSRequest{
@@ -194,11 +202,6 @@ func (c *WSClient) SubscribeSnapshot(codes []string, callback func(WSSnapshot)) 
 
 // UnsubscribeSnapshot 取消订阅实时快照
 func (c *WSClient) UnsubscribeSnapshot(codes []string) error {
-	key := "S"
-	for _, code := range codes {
-		delete(c.subscribers, key+"_"+code)
-	}
-
 	return c.sendRequest(WSRequest{
 		Type:  "SC",
 		Codes: codes,
@@ -208,10 +211,8 @@ func (c *WSClient) UnsubscribeSnapshot(codes []string) error {
 // SubscribeTrade 订阅实时逐笔成交
 func (c *WSClient) SubscribeTrade(codes []string, callback func(WSTrade)) error {
 	key := "T"
-	for _, code := range codes {
-		c.subscribers[key+"_"+code] = func(data interface{}) {
-			callback(data.(WSTrade))
-		}
+	c.subscribers[key] = func(data interface{}) {
+		callback(data.(WSTrade))
 	}
 
 	return c.sendRequest(WSRequest{
@@ -222,11 +223,6 @@ func (c *WSClient) SubscribeTrade(codes []string, callback func(WSTrade)) error 
 
 // UnsubscribeTrade 取消订阅实时逐笔成交
 func (c *WSClient) UnsubscribeTrade(codes []string) error {
-	key := "T"
-	for _, code := range codes {
-		delete(c.subscribers, key+"_"+code)
-	}
-
 	return c.sendRequest(WSRequest{
 		Type:  "TC",
 		Codes: codes,
@@ -236,10 +232,8 @@ func (c *WSClient) UnsubscribeTrade(codes []string) error {
 // SubscribeDepth 订阅实时盘口
 func (c *WSClient) SubscribeDepth(codes []string, callback func(WSDepth)) error {
 	key := "D"
-	for _, code := range codes {
-		c.subscribers[key+"_"+code] = func(data interface{}) {
-			callback(data.(WSDepth))
-		}
+	c.subscribers[key] = func(data interface{}) {
+		callback(data.(WSDepth))
 	}
 
 	return c.sendRequest(WSRequest{
@@ -250,11 +244,6 @@ func (c *WSClient) SubscribeDepth(codes []string, callback func(WSDepth)) error 
 
 // UnsubscribeDepth 取消订阅实时盘口
 func (c *WSClient) UnsubscribeDepth(codes []string) error {
-	key := "D"
-	for _, code := range codes {
-		delete(c.subscribers, key+"_"+code)
-	}
-
 	return c.sendRequest(WSRequest{
 		Type:  "DC",
 		Codes: codes,
@@ -263,12 +252,9 @@ func (c *WSClient) UnsubscribeDepth(codes []string) error {
 
 // SubscribeKLine 订阅实时K线
 func (c *WSClient) SubscribeKLine(codes []string, klineType int, callback func(WSKLine)) error {
-	key := fmt.Sprintf("K_%d", klineType)
-	for _, code := range codes {
-		fullKey := key + "_" + code
-		c.subscribers[fullKey] = func(data interface{}) {
-			callback(data.(WSKLine))
-		}
+	key := "K"
+	c.subscribers[key] = func(data interface{}) {
+		callback(data.(WSKLine))
 	}
 
 	return c.sendRequest(WSRequest{
@@ -280,11 +266,6 @@ func (c *WSClient) SubscribeKLine(codes []string, klineType int, callback func(W
 
 // UnsubscribeKLine 取消订阅实时K线
 func (c *WSClient) UnsubscribeKLine(codes []string, klineType int) error {
-	key := fmt.Sprintf("K_%d", klineType)
-	for _, code := range codes {
-		delete(c.subscribers, key+"_"+code)
-	}
-
 	return c.sendRequest(WSRequest{
 		Type:      "KC",
 		Codes:     codes,
