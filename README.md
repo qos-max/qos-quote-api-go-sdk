@@ -32,27 +32,118 @@ go get github.com/qos-max/qos-quote-api-go-sdk/qos-quote-api-go-sdk/qosapi
 package main
 
 import (
-"fmt"
-"log"
-
-    "github.com/qos-max/qos-quote-api-go-sdk/qosapi"
+	"fmt"
+	"github.com/qos-max/qos-quote-api-go-sdk/qosapi"
+	"log"
+	"time"
 )
-
+//官网:https://qos.hk
+//API文档:https://qos.hk/api.html
+//注册API KEY:https://qos.hk
 func main() {
-// 创建客户端
-client := qosapi.NewClient("您的API密钥")
+	// 替换为你的API Key
+	apiKey := "your-api-key"
+	client := qosapi.NewClient(apiKey)
 
-    // 获取基础信息
-    info, err := client.GetInstrumentInfo([]string{"US:AAPL", "HK:00700"})
-    if err != nil {
-        log.Fatal(err)
-    }
+	// 示例1: 获取基础信息
+	codes := []string{
+		"US:AAPL,TSLA",
+		"HK:700,9988",
+		"SH:600519,600518",
+		"SZ:000001,002594",
+	}
 
-    // 打印结果
-    for _, item := range info {
-        fmt.Printf("%s: %s(总股本:%d)\n", item.Code, item.NameCN, item.TotalShares)
-    }
+	info, err := client.GetInstrumentInfo(codes)
+	if err != nil {
+		log.Fatalf("Failed to get instrument info: %v", err)
+	}
+	fmt.Println("Instrument Info:")
+	for _, item := range info {
+		fmt.Printf("%s: %s (%s)\n", item.Code, item.NameCN, item.NameEN)
+	}
+
+	// 示例2: 获取行情快照
+	snapshots, err := client.GetSnapshot(codes)
+	if err != nil {
+		log.Fatalf("Failed to get snapshots: %v", err)
+	}
+	fmt.Println("\nSnapshots:")
+	for _, s := range snapshots {
+		fmt.Printf("%s: %s (High: %s, Low: %s)\n", s.Code, s.LastPrice, s.High, s.Low)
+	}
+
+	// 示例3: 获取盘口深度
+	depths, err := client.GetDepth(codes)
+	if err != nil {
+		log.Fatalf("Failed to get depths: %v", err)
+	}
+	fmt.Println("\nDepths:")
+	for _, d := range depths {
+		fmt.Printf("%s: Bids %d, Asks %d\n", d.Code, len(d.Bids), len(d.Asks))
+	}
+
+	// 示例4: 获取逐笔成交
+	trades, err := client.GetTrade(codes, 5)
+	if err != nil {
+		log.Fatalf("Failed to get trades: %v", err)
+	}
+	fmt.Println("\nTrades:")
+	for _, t := range trades {
+		fmt.Printf("%s: Price %s, Volume %s, Direction %d\n", t.Code, t.Price, t.Volume, t.Direction)
+	}
+
+	// 示例5: 获取K线
+	klineReqs := []qosapi.KLineRequest{
+		{
+			Codes:     "US:AAPL,TSLA",
+			Count:     2,
+			Adjust:    0,
+			KLineType: qosapi.KLineTypeDay,
+		},
+		{
+			Codes:     "CF:BTCUSDT,ETHUSDT",
+			Count:     2,
+			Adjust:    0,
+			KLineType: qosapi.KLineTypeDay,
+		},
+	}
+
+	klineData, err := client.GetKLine(klineReqs)
+	if err != nil {
+		log.Fatalf("Failed to get KLine: %v", err)
+	}
+	fmt.Println("\nKLine:")
+	for _, klines := range klineData {
+		for _, k := range klines {
+			fmt.Printf("%s: O:%s C:%s H:%s L:%s V:%s\n",
+				k.Code, k.Open, k.Close, k.High, k.Low, k.Volume)
+		}
+	}
+
+	// 示例6: 获取历史K线
+	historyReqs := []qosapi.KLineRequest{
+		{
+			Codes:     "US:AAPL",
+			Count:     2,
+			Adjust:    0,
+			KLineType: qosapi.KLineTypeDay,
+			EndTime:   time.Now().Unix(),
+		},
+	}
+
+	historyData, err := client.GetHistoryKLine(historyReqs)
+	if err != nil {
+		log.Fatalf("Failed to get history KLine: %v", err)
+	}
+	fmt.Println("\nHistory KLine:")
+	for _, klines := range historyData {
+		for _, k := range klines {
+			fmt.Printf("%s: O:%s C:%s H:%s L:%s V:%s\n",
+				k.Code, k.Open, k.Close, k.High, k.Low, k.Volume)
+		}
+	}
 }
+
 ```
 
 ### WebSocket客户端示例
