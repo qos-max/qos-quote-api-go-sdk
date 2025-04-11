@@ -107,6 +107,7 @@ type WSRequest struct {
 // WebSocket响应
 type WSResponse struct {
 	Type  string      `json:"type"`
+	TP    string      `json:"tp"`
 	Msg   string      `json:"msg"`
 	Time  int64       `json:"time,omitempty"`
 	ReqID int         `json:"reqid,omitempty"`
