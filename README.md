@@ -21,7 +21,7 @@ QOS行情数据API(Quote Ocean System)的Go客户端库。提供HTTP和WebSocket
 ## 安装
 
 ```bash
-go get github.com/qos-max/qos-quote-api-go-sdk/qos-quote-api-go-sdk/qosapi
+go get github.com/qos-max/qos-quote-api-go-sdk/qosapi
 ```
 
 ## 使用示例
